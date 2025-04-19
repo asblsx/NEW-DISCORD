@@ -1,108 +1,118 @@
-import discord
-from discord.ext import commands, tasks
 import os
-import random
-import aiohttp
-import io
-from datetime import datetime
+import discord
+from discord.ext import commands
+from discord import app_commands
+
 from myserver import server_on
 
-# ตั้งค่า Intents
-intents = discord.Intents.default()
-intents.members = True  # เปิดใช้งาน Server Members Intent
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
-bot = commands.Bot(command_prefix='!', intents=intents)
 
-# ใช้ environment variable สำหรับ Token
-TOKEN = os.getenv('TOKEN')
-chat_channel_id = 1362748298858991778  # ใส่ ID ของช่องแชท
-server_channel_id = 1363123342135132351  # ใส่ ID ของช่องเซิร์ฟเวอร์
 
+# //////////////////// Bot Event /////////////////////////
+# คำสั่ง bot พร้อมใช้งานแล้ว
 @bot.event
 async def on_ready():
-    print(f"✅ Logged in as {bot.user}!")
+    print("Bot Online!")
+    print("555")
     synced = await bot.tree.sync()
-    print(f"{len(synced)} command(s) synced.")
-    send_random_messages.start()
+    print(f"{len(synced)} command(s)")
 
-@tasks.loop(seconds=20)
-async def send_random_messages():
-    messages = [
-   'มึงเข้ามาแล้วเหรอ? มาทำไม 🤨🔥',
-    'มาดิไม่กลัวเลย เดี๋ยวขยี้ให้ดู 😎💥',
-    'กูรออยู่, จะหนีไปไหน 🤡',
-    'ไหน มึงกล้าพูดแบบนี้กับกูหรอ 😈💬',
-    'มึงคิดว่ามากูจะกลัวหรอ? โทษที กูขำ 🤣',
-    'มีอะไรจะบอก กูฟังอยู่ 😜👌',
-    'มาดิ มาเล่นกับกูหน่อย 🔥',
-    'เอ้า!! ทำไมไม่มาต่อสู้บ้าง 😤',
-    'เข้ามาดิ!! 😎🔥',
-    'เอาดิ ไม่กล้าเหรอ 😏',
-    'มีไรก็มาดิครับ 💥',
-    'ไหนใครแน่ 😈',
-    'โอ้โห คิดว่ากลัวหรอ 🤣',
-    'มาเล่นกันหน่อยไหมเพื่อน 😜',
-    'ใจถึงพึ่งได้ 🔥',
-    'มาท้าให้ได้กูไม่รอ 😤',
-    'เล่นกันเถอะ อยากเห็นคนทำตาม 😜',
-    'มึงมาทำไม 😏 หรือต้องให้กูท้าอีก? 🔥',
-    'มาเล่นกันเถอะ จะได้ดูว่ากูเจ๋งขนาดไหน 😎💥',
-    'อยากลองของจริงเหรอ? กูรออยู่ 😈',
-    'กล้าเข้ามาเหรอ? กูแค่รอเวลาจัดการ 😈💀',
-    'มึงจะหนีไปไหน? 😏🔥 อยู่ตรงนี้แหละ 😜',
-    'เอาดิ ไม่กล้าเหรอ? 🤡 มาดูใครเจ๋งกว่า 😎💥',
-    'มาเถอะ อยากเห็นว่ามึงจะทำได้ไหม 😈💥',
-    'แค่นี้มึงก็คิดจะหยุดแล้วเหรอ? 😏 กูยังไม่เหนื่อยเลย 🔥',
-    'เข้ามาเลย กูรออยู่ 😏 อย่าบอกนะว่ากลัว 😈',
-    'พูดไปเรื่อยๆ แต่ทำไมไม่กล้ามาเลย 😎🔥',
-    'เหยียบมาเหอะ แล้วกูจะโชว์ให้ดูว่าเจ๋งแค่ไหน 😈💥',
-    'มึงคิดว่ากลัวหรอ? กูขำ 🤣🔥 มาเลย! 😜',
-    'จะให้กูแสดงให้ดูไหม? กูรออยู่ 🔥💥',
-    'ไม่ต้องกลัวไป กลัวไปก็ไม่น่าสนุก 😜🔥',
-    'กูจะบอกให้มึงรู้เองว่าใครแน่ 🔥😈',
-    'ไม่รู้เหรอว่ามึงทำอะไรมันก็ไม่พอสำหรับกู 😏💥',
-    'มามิ รอดูหน่อยว่าคุณกล้าไหม 😜🔥',
-    'จะวิ่งหนีเหรอ? ทำไมไม่สู้แบบแมนๆ ไปเลย 😈💥',
-    'หายไปไหน? กูรอคำท้า 😏🔥',
-    'ใครกล้าเข้ามา? หรือจะให้กูเชิญ 😜🔥',
-    'มีอะไรอีกไหม? กูพร้อมทุกเวลา 😈💥',
-    'คอยดูให้ดี มึงจะได้รู้เองว่าใครเจ๋ง 🔥😎'
-    ]
 
-    chat_channel = bot.get_channel(chat_channel_id)
-    server_channel = bot.get_channel(server_channel_id)
 
-    if chat_channel:
-        random_message = random.choice(messages)
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://api.imgflip.com/get_memes') as response:
-                if response.status == 200:
-                    data = await response.json()
-                    if 'data' in data and 'memes' in data['data']:
-                        meme = random.choice(data['data']['memes'])
-                        async with session.get(meme['url']) as img_response:
-                            if img_response.status == 200:
-                                img_data = await img_response.read()
-                                file = discord.File(io.BytesIO(img_data), 'meme.jpg')
-                                await chat_channel.send(content=random_message, file=file)
 
-    if server_channel:
-        time_now = datetime.utcnow().strftime('%H:%M:%S')
-        guild = server_channel.guild
-        member_count = guild.member_count
-        roles = '\n'.join([role.name for role in guild.roles]) or 'ไม่มีบทบาท'
+# แจ้งคนเข้า -ออกเซิฟเวอร์
 
-        status_message = f"""
-**🕒 เวลาปัจจุบัน:** {time_now}
-**👥 จำนวนสมาชิกในเซิร์ฟ:** {member_count}
-**📜 บทบาทในเซิร์ฟ:**
-{roles}
-        """
-        await server_channel.send(status_message)
+@bot.event
+async def on_member_join(member):
+    channel = bot.get_channel(1140633489520205934) # IDห้อง
+    text = f"Welcome to the server, {member.mention}!"
+
+    emmbed = discord.Embed(title = 'Welcome to the server!',
+                           description = text,
+                           color = 0x66FFFF)
+
+    await channel.send(text) # ส่งข้อความไปที่ห้องนี้
+    await channel.send(embed = emmbed)  # ส่ง Embed ไปที่ห้องนี้
+    await member.send(text) # ส่งข้อความไปที่แชทส่วนตัวของ member
+
+
+@bot.event
+async def on_member_remove(member):
+    channel = bot.get_channel(1140633489520205934)  # IDห้อง
+    text = f"{member.name} has left the server!"
+    await channel.send(text)  # ส่งข้อความไปที่ห้องนี้
+
+
+
+# คำสั่ง chatbot
+@bot.event
+async def on_message(message):
+    mes = message.content # ดึงข้อความที่ถูกส่งมา
+    if mes == 'hello':
+        await message.channel.send("Hello It's me") # ส่งกลับไปที่ห้องนั่น
+
+    elif mes == 'hi bot':
+        await message.channel.send("Hello, " + str(message.author.name))
+
+    await bot.process_commands(message)
+    # ทำคำสั่ง event แล้วไปทำคำสั่ง bot command ต่อ
+
+
+
+
+# ///////////////////// Commands /////////////////////
+# กำหนดคำสั่งให้บอท
+
+@bot.command()
+async def hello(ctx):
+    await ctx.send(f"hello {ctx.author.name}!")
+
+
+@bot.command()
+async def test(ctx, arg):
+    await ctx.send(arg)
+
+
+# Slash Commands
+@bot.tree.command(name='hellobot', description='Replies with Hello')
+async def hellocommand(interaction):
+    await interaction.response.send_message("Hello It's me BOT DISCORD")
+
+
+@bot.tree.command(name='name')
+@app_commands.describe(name = "What's your name?")
+async def namecommand(interaction, name : str):
+    await interaction.response.send_message(f"Hello {name}")
+
+
+# Embeds
+
+@bot.tree.command(name='help', description='Bot Commands')
+async def helpcommand(interaction):
+    emmbed = discord.Embed(title='Help Me! - Bot Commands',
+                           description='Bot Commands',
+                           color=0x66FFFF,
+                           timestamp= discord.utils.utcnow())
+
+
+    # ใส่ข้อมูล
+    emmbed.add_field(name='/hello1', value='Hello Commmand', inline=True)
+    emmbed.add_field(name='/hello2', value='Hello Commmand', inline=True)
+    emmbed.add_field(name='/hello3', value='Hello Commmand', inline=False)
+
+    emmbed.set_author(name='Author', url='https://www.youtube.com/@maoloop01/channels', icon_url='https://yt3.googleusercontent.com/0qFq3tGT6LVyfLtZc-WCXcV9YyEFQ0M9U5W8qDe36j2xBTN34CJ20dZYQHmBz6aXASmttHI=s900-c-k-c0x00ffffff-no-rj')
+
+    # ใส่รูปเล็ก-ใหญ่
+    emmbed.set_thumbnail(url='https://yt3.googleusercontent.com/0qFq3tGT6LVyfLtZc-WCXcV9YyEFQ0M9U5W8qDe36j2xBTN34CJ20dZYQHmBz6aXASmttHI=s900-c-k-c0x00ffffff-no-rj')
+    emmbed.set_image(url='https://i.ytimg.com/vi/KZRa9DQzUpQ/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCfWDgiBYjFJtrUasd5yxmQZJG_cg')
+
+    # Footer เนื้อหาส่วนท้าย
+    emmbed.set_footer(text='Footer', icon_url='https://yt3.googleusercontent.com/0qFq3tGT6LVyfLtZc-WCXcV9YyEFQ0M9U5W8qDe36j2xBTN34CJ20dZYQHmBz6aXASmttHI=s900-c-k-c0x00ffffff-no-rj')
+
+    await interaction.response.send_message(embed = emmbed)
+
 
 server_on()
 
-if TOKEN:
-    bot.run(TOKEN)
-else:
-    print("❌ Token not found! Please set the TOKEN environment variable.")
+bot.run(os.getenv('TOKEN'))
